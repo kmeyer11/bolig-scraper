@@ -7,5 +7,6 @@ __pycache__/
 bolig_scraper.db
 bolig_scraper.db.bak*
 matches.csv
+matches.xlsx
 run.log
 krav.txt

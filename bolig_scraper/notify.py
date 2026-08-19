@@ -3,6 +3,21 @@ for all new matches found in a run, using AppleScript / osascript.
 
 No SMTP credentials are stored anywhere — this just remote-controls the already
 logged-in Mail.app to compose+send from its default account.
+
+Two non-obvious things had to be true for `send` to actually deliver, confirmed by
+checking the account's Sent mailbox via AppleScript after each attempt:
+1. `sender` must be set explicitly — this Mail.app has two accounts registered under
+   the same address, and without it `send` silently picked one that never delivered.
+2. The outgoing message must be created with `visible:true`. With `visible:false`,
+   `send` returns success but the message is never actually transmitted — it's left
+   sitting as an open, unsent compose window. Mail.app closes the window itself once
+   a `visible:true` send actually succeeds, so this doesn't leave clutter behind.
+
+`visible:true` also activates Mail.app (brings it to the front) while composing —
+macOS/iOS generally suppress a "new mail" banner for the app that's currently frontmost,
+so the synced-back copy of a self-addressed send was arriving without a notification.
+Explicitly reactivating Finder right after `send` defocuses Mail again, so it's no
+longer frontmost by the time the message syncs back into the inbox.
 """
 from __future__ import annotations
 
@@ -15,6 +30,11 @@ from .models import Listing
 logger = logging.getLogger(__name__)
 
 DEFAULT_RECIPIENT = "brandvarm91@hotmail.com"
+# Mail.app has both an Exchange (Hotmail) and a Google account registered under this
+# same address; without an explicit sender, `send` silently picked an account whose
+# message never actually reached the inbox. Setting `sender` explicitly fixed it —
+# confirmed by checking the Exchange account's Sent mailbox via AppleScript.
+DEFAULT_SENDER = "brandvarm91@hotmail.com"
 
 
 def _as_applescript_string(text: str) -> str:
@@ -63,7 +83,9 @@ def _run_osascript(script: str) -> bool:
     return True
 
 
-def send_new_matches_email(listings: List[Listing], recipient: str = DEFAULT_RECIPIENT) -> bool:
+def send_new_matches_email(
+    listings: List[Listing], recipient: str = DEFAULT_RECIPIENT, sender: str = DEFAULT_SENDER
+) -> bool:
     if not listings:
         return True
 
@@ -74,12 +96,15 @@ def send_new_matches_email(listings: List[Listing], recipient: str = DEFAULT_REC
 
     script = f"""
 tell application "Mail"
-    set newMessage to make new outgoing message with properties {{subject:{_as_applescript_string(subject)}, content:{_body_expression(lines)}, visible:false}}
+    set newMessage to make new outgoing message with properties {{subject:{_as_applescript_string(subject)}, content:{_body_expression(lines)}, visible:true}}
     tell newMessage
+        set sender to {_as_applescript_string(sender)}
         make new to recipient at end of to recipients with properties {{address:{_as_applescript_string(recipient)}}}
     end tell
     send newMessage
+    delay 2
 end tell
+tell application "Finder" to activate
 """.strip()
 
     ok = _run_osascript(script)
@@ -88,14 +113,17 @@ end tell
     return ok
 
 
-def send_test_email(recipient: str = DEFAULT_RECIPIENT) -> bool:
+def send_test_email(recipient: str = DEFAULT_RECIPIENT, sender: str = DEFAULT_SENDER) -> bool:
     script = f"""
 tell application "Mail"
-    set newMessage to make new outgoing message with properties {{subject:{_as_applescript_string("Bolig-scraper: test")}, content:{_as_applescript_string("Dette er en testmail fra bolig-scraper — hvis du ser denne, virker notifikationen.")}, visible:false}}
+    set newMessage to make new outgoing message with properties {{subject:{_as_applescript_string("Bolig-scraper: test")}, content:{_as_applescript_string("Dette er en testmail fra bolig-scraper — hvis du ser denne, virker notifikationen.")}, visible:true}}
     tell newMessage
+        set sender to {_as_applescript_string(sender)}
         make new to recipient at end of to recipients with properties {{address:{_as_applescript_string(recipient)}}}
     end tell
     send newMessage
+    delay 2
 end tell
+tell application "Finder" to activate
 """.strip()
     return _run_osascript(script)

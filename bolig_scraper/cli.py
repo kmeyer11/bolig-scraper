@@ -18,7 +18,7 @@ from typing import List
 
 import requests
 
-from . import notify
+from . import notify, xlsx_export
 from .config import Criteria, load_krav
 from .models import Listing
 from .sites import SITE_REGISTRY
@@ -37,7 +37,8 @@ def parse_args(argv: List[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Scan boligzonen/boligportal for nye lejligheder.")
     parser.add_argument("--krav", default="krav.txt", help="Sti til krav-fil (default: krav.txt)")
     parser.add_argument("--db", default="bolig_scraper.db", help="Sti til sqlite seen-db")
-    parser.add_argument("--csv", default="matches.csv", help="Sti til matches-csv")
+    parser.add_argument("--csv", default="matches.csv", help="Sti til matches-csv (rå historik)")
+    parser.add_argument("--xlsx", default="matches.xlsx", help="Sti til pænt formateret matches-xlsx (overblik)")
     parser.add_argument("--max-pages", type=int, default=3, help="Max sider pr. site x sted (default: 3)")
     parser.add_argument("--dry-run", action="store_true", help="Ingen DB/CSV-writes, ingen email, kun print")
     parser.add_argument("--no-notify", action="store_true", help="Spring email over, men skriv stadig DB/CSV")
@@ -149,6 +150,8 @@ def run(args: argparse.Namespace) -> int:
 
         if not args.dry_run:
             append_csv(Path(args.csv), new_matches)
+            if new_matches:
+                xlsx_export.write_xlsx(args.csv, args.xlsx)
 
         if new_matches and not args.dry_run and not args.no_notify:
             notify.send_new_matches_email(new_matches)
