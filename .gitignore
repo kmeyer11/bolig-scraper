@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+
+bolig_scraper.db
+bolig_scraper.db.bak*
+matches.csv
+run.log
+krav.txt

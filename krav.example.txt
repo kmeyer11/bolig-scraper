@@ -1,0 +1,24 @@
+# Kopiér denne fil til krav.txt og tilpas efter behov.
+# Tom værdi = ingen grænse i den retning.
+
+# Sted(er), kommasepareret. Matches mod opslagets adresse/område (fx "Aarhus C").
+sted: Aarhus C, Odense Ø, Vejle
+
+# Pris pr. måned i kr.
+min_pris: 5000
+max_pris: 9000
+
+# Størrelse i m²
+min_kvm: 40
+max_kvm: 80
+
+# Antal værelser
+min_vaerelser: 2
+max_vaerelser: 4
+
+# Overtagelsesdato (YYYY-MM-DD). Ledige-nu-opslag opfylder altid "tidligst".
+overtagelse_tidligst: 2026-09-01
+overtagelse_senest: 2026-12-01
+
+# Hvilke sites der skal søges på (kommasepareret): boligzonen, boligportal
+sites: boligzonen, boligportal
