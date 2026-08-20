@@ -154,7 +154,8 @@ def run(args: argparse.Namespace) -> int:
                 xlsx_export.write_xlsx(args.csv, args.xlsx)
 
         if new_matches and not args.dry_run and not args.no_notify:
-            notify.send_new_matches_email(new_matches)
+            recipients = [notify.DEFAULT_RECIPIENT, *criteria.ekstra_email]
+            notify.send_new_matches_email(new_matches, recipients=recipients)
 
     return 0
 
@@ -164,7 +165,13 @@ def main(argv: List[str] | None = None) -> int:
     setup_logging(args.verbose)
 
     if args.test_notify:
-        ok = notify.send_test_email()
+        ekstra_email: List[str] = []
+        try:
+            ekstra_email = load_krav(args.krav).ekstra_email
+        except (OSError, ValueError) as exc:
+            logger.warning("Kunne ikke læse ekstra_email fra %s (%s) — sender kun til standardmodtager.", args.krav, exc)
+        recipients = [notify.DEFAULT_RECIPIENT, *ekstra_email]
+        ok = notify.send_test_email(recipients=recipients)
         print("Testmail sendt." if ok else "Testmail fejlede — se log ovenfor.")
         return 0 if ok else 1
 

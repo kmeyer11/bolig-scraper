@@ -4,6 +4,10 @@
 # Sted(er), kommasepareret. Matches mod opslagets adresse/område (fx "Aarhus C").
 sted: Aarhus C, Odense Ø, Vejle
 
+# Udelukkede delområder, kommasepareret (fx et kvarternavn du ikke vil have, selvom
+# det ligger inden for et af ovenstående steder). Tom = ingen udelukkelse.
+udelukket_sted:
+
 # Pris pr. måned i kr.
 min_pris: 5000
 max_pris: 9000
@@ -20,5 +24,8 @@ max_vaerelser: 4
 overtagelse_tidligst: 2026-09-01
 overtagelse_senest: 2026-12-01
 
-# Hvilke sites der skal søges på (kommasepareret): boligzonen, boligportal
+# Hvilke sites der skal søges på (kommasepareret): boligzonen, boligportal, munkebjergpark
 sites: boligzonen, boligportal
+
+# Ekstra email-modtager(e) ud over standardmodtageren (kommasepareret). Tom = ingen ekstra.
+ekstra_email:

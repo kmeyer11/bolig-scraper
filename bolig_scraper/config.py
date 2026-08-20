@@ -56,6 +56,7 @@ def _parse_list(value: str) -> List[str]:
 @dataclass
 class Criteria:
     sted: List[str] = field(default_factory=list)
+    udelukket_sted: List[str] = field(default_factory=list)
     min_pris: Optional[int] = None
     max_pris: Optional[int] = None
     min_kvm: Optional[float] = None
@@ -65,6 +66,7 @@ class Criteria:
     overtagelse_tidligst: Optional[date] = None
     overtagelse_senest: Optional[date] = None
     sites: List[str] = field(default_factory=lambda: list(DEFAULT_SITES))
+    ekstra_email: List[str] = field(default_factory=list)
 
     @property
     def city_slugs(self) -> List[str]:
@@ -85,8 +87,14 @@ class Criteria:
                 return True
         return False
 
+    def matches_udelukket_sted(self, address: str) -> bool:
+        norm_address = normalize(address)
+        return any(normalize(sted) in norm_address for sted in self.udelukket_sted)
+
     def matches(self, listing: Listing) -> bool:
         if not self.matches_sted(listing.address):
+            return False
+        if self.matches_udelukket_sted(listing.address):
             return False
         if listing.price_kr is not None:
             if self.min_pris is not None and listing.price_kr < self.min_pris:
@@ -117,6 +125,7 @@ class Criteria:
 
 FIELD_PARSERS = {
     "sted": _parse_list,
+    "udelukket_sted": _parse_list,
     "min_pris": _parse_int,
     "max_pris": _parse_int,
     "min_kvm": _parse_float,
@@ -126,6 +135,7 @@ FIELD_PARSERS = {
     "overtagelse_tidligst": _parse_date,
     "overtagelse_senest": _parse_date,
     "sites": _parse_list,
+    "ekstra_email": _parse_list,
 }
 
 

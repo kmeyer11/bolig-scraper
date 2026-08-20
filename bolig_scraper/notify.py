@@ -83,8 +83,17 @@ def _run_osascript(script: str) -> bool:
     return True
 
 
+def _to_recipients_block(recipients: Sequence[str]) -> str:
+    return "\n        ".join(
+        f"make new to recipient at end of to recipients with properties {{address:{_as_applescript_string(r)}}}"
+        for r in recipients
+    )
+
+
 def send_new_matches_email(
-    listings: List[Listing], recipient: str = DEFAULT_RECIPIENT, sender: str = DEFAULT_SENDER
+    listings: List[Listing],
+    recipients: Sequence[str] = (DEFAULT_RECIPIENT,),
+    sender: str = DEFAULT_SENDER,
 ) -> bool:
     if not listings:
         return True
@@ -99,7 +108,7 @@ tell application "Mail"
     set newMessage to make new outgoing message with properties {{subject:{_as_applescript_string(subject)}, content:{_body_expression(lines)}, visible:true}}
     tell newMessage
         set sender to {_as_applescript_string(sender)}
-        make new to recipient at end of to recipients with properties {{address:{_as_applescript_string(recipient)}}}
+        {_to_recipients_block(recipients)}
     end tell
     send newMessage
     delay 2
@@ -109,17 +118,19 @@ tell application "Finder" to activate
 
     ok = _run_osascript(script)
     if ok:
-        logger.info("Email sendt til %s med %d nye match.", recipient, len(listings))
+        logger.info("Email sendt til %s med %d nye match.", ", ".join(recipients), len(listings))
     return ok
 
 
-def send_test_email(recipient: str = DEFAULT_RECIPIENT, sender: str = DEFAULT_SENDER) -> bool:
+def send_test_email(
+    recipients: Sequence[str] = (DEFAULT_RECIPIENT,), sender: str = DEFAULT_SENDER
+) -> bool:
     script = f"""
 tell application "Mail"
     set newMessage to make new outgoing message with properties {{subject:{_as_applescript_string("Bolig-scraper: test")}, content:{_as_applescript_string("Dette er en testmail fra bolig-scraper — hvis du ser denne, virker notifikationen.")}, visible:true}}
     tell newMessage
         set sender to {_as_applescript_string(sender)}
-        make new to recipient at end of to recipients with properties {{address:{_as_applescript_string(recipient)}}}
+        {_to_recipients_block(recipients)}
     end tell
     send newMessage
     delay 2

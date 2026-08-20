@@ -1,9 +1,9 @@
 # bolig-scraper
 
-Scanner boligzonen.dk og boligportal.dk for lejeboliger der matcher dine krav (sted,
-pris, m², værelser, overtagelsesdato). Allerede-sete opslag springes stille over —
-du får kun besked når der dukker en *ny* lejlighed op, som en email sendt via din
-egen Mail.app (kræver at din Hotmail-konto allerede er sat op der).
+Scanner boligzonen.dk, boligportal.dk og munkebjergpark.dk for lejeboliger der matcher
+dine krav (sted, pris, m², værelser, overtagelsesdato). Allerede-sete opslag springes
+stille over — du får kun besked når der dukker en *ny* lejlighed op, som en email
+sendt via din egen Mail.app (kræver at din Hotmail-konto allerede er sat op der).
 
 ## Opsætning
 
@@ -13,8 +13,8 @@ python3 -m venv .venv
 cp krav.example.txt krav.txt
 ```
 
-Ret `krav.txt` til dine egne krav (sted, pris, m², værelser, overtagelsesdato,
-hvilke sites). Se kommentarerne i filen.
+Ret `krav.txt` til dine egne krav (sted, udelukkede delområder, pris, m², værelser,
+overtagelsesdato, hvilke sites, ekstra email-modtagere). Se kommentarerne i filen.
 
 ## Kørsel
 
@@ -57,9 +57,11 @@ Hvis en fremtidig mail udebliver, så tjek `run.log` for fejl.
 - `storage.py` holder styr på sete opslag i en lokal sqlite-db (`bolig_scraper.db`),
   så du aldrig får den samme lejlighed to gange.
 - `config.py` matcher `sted` mod opslagets adresse-/områdetekst (fx "Aarhus C"),
-  ikke kun by-niveau.
+  ikke kun by-niveau. `udelukket_sted` fravælger opslag hvis en af disse tekster
+  optræder i adressen, selvom den også matcher `sted` (fx et navngivet kvarter).
 - `notify.py` sender én samlet mail pr. kørsel med alle nye match, via AppleScript
   mod din allerede-loggede-ind Mail.app — ingen adgangskoder gemmes i projektet.
+  Sendes altid til standardmodtageren plus evt. `ekstra_email` fra `krav.txt`.
   Aktiverer Finder igen efter afsendelse, så Mail.app ikke bliver hængende som
   forreste app — ellers undertrykker macOS/iOS "ny mail"-notifikationen for den
   synkede kopi (fundet og fixet under test).
@@ -79,3 +81,7 @@ Hvis en fremtidig mail udebliver, så tjek `run.log` for fejl.
 - boligportal kan i teorien indføre bot-beskyttelse (Cloudflare); det er ikke
   observeret endnu, men hvis requests begynder at fejle konsekvent er det første
   mistænkte.
+- munkebjergpark.dk er én fast ejendom (ikke en by-søgbar portal) — dens bygninger
+  identificeres af interne WordPress post-ID'er hardkodet i `munkebjergpark.py`.
+  Går et opslagstal til 0 for alle bygninger, mens siden selv viser ledige boliger,
+  er IDs sandsynligvis skiftet og skal genfindes via browserens netværksfaner.
